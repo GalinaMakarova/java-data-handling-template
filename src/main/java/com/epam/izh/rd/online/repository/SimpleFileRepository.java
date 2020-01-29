@@ -1,5 +1,8 @@
 package com.epam.izh.rd.online.repository;
 
+import java.io.File;
+import java.io.IOException;
+
 public class SimpleFileRepository implements FileRepository {
 
     /**
@@ -10,7 +13,19 @@ public class SimpleFileRepository implements FileRepository {
      */
     @Override
     public long countFilesInDirectory(String path) {
-        return 0;
+        long resultCountInDirectory = 0;
+        File targetObjectInDirectory = new File("src/main/resources/" + path);
+        if (targetObjectInDirectory.isDirectory()) {
+            File[] internalDirectoryObjectsArray = targetObjectInDirectory.listFiles();
+            for (File internalDirectoryObject : internalDirectoryObjectsArray) {
+                resultCountInDirectory = resultCountInDirectory +
+                        countFilesInDirectory(path + "/" + internalDirectoryObject.getName());
+            }
+        } else {
+            resultCountInDirectory = resultCountInDirectory + 1;
+        }
+
+        return resultCountInDirectory;
     }
 
     /**
@@ -21,7 +36,17 @@ public class SimpleFileRepository implements FileRepository {
      */
     @Override
     public long countDirsInDirectory(String path) {
-        return 0;
+        long resultFoldersCount = 0;
+        File targetObjectInDirectory = new File("src/main/resources/" + path);
+        if (targetObjectInDirectory.isDirectory()) {
+            resultFoldersCount = resultFoldersCount + 1;
+            File[] internalDirectoryObjectsArray = targetObjectInDirectory.listFiles();
+            for (File internalDirectoryObject : internalDirectoryObjectsArray) {
+                resultFoldersCount = resultFoldersCount +
+                        countDirsInDirectory(path + "/" + internalDirectoryObject.getName());
+            }
+        }
+        return resultFoldersCount;
     }
 
     /**
@@ -44,9 +69,23 @@ public class SimpleFileRepository implements FileRepository {
      */
     @Override
     public boolean createFile(String path, String name) {
-        return false;
+        File targetDirectory = new File("src/main/resources/" + path);
+        File targetFile = new File("src/main/resources/" + path, name);
+        if (!targetDirectory.exists()) {
+            targetDirectory.mkdir();
+            return createFile(path, name);
+        } else {
+            if (targetDirectory.isDirectory()) {
+                try {
+                    return targetFile.createNewFile();
+                } catch (IOException e) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
     }
-
     /**
      * Метод считывает тело файла .txt из папки src/main/resources
      *
