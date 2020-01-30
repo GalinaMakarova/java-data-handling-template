@@ -2,6 +2,8 @@ package com.epam.izh.rd.online.repository;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
+import java.util.Scanner;
 
 public class SimpleFileRepository implements FileRepository {
 
@@ -41,6 +43,7 @@ public class SimpleFileRepository implements FileRepository {
         if (targetObjectInDirectory.isDirectory()) {
             resultFoldersCount = resultFoldersCount + 1;
             File[] internalDirectoryObjectsArray = targetObjectInDirectory.listFiles();
+            assert internalDirectoryObjectsArray != null;
             for (File internalDirectoryObject : internalDirectoryObjectsArray) {
                 resultFoldersCount = resultFoldersCount +
                         countDirsInDirectory(path + "/" + internalDirectoryObject.getName());
@@ -86,6 +89,7 @@ public class SimpleFileRepository implements FileRepository {
             }
         }
     }
+
     /**
      * Метод считывает тело файла .txt из папки src/main/resources
      *
@@ -94,6 +98,19 @@ public class SimpleFileRepository implements FileRepository {
      */
     @Override
     public String readFileFromResources(String fileName) {
-        return null;
+        ClassLoader classLoader = getClass().getClassLoader();
+        try {
+            File targetFile = new File(Objects.requireNonNull(classLoader.getResource(fileName)).getFile());
+            StringBuilder stringBuffer = new StringBuilder("");
+            Scanner scannerReader = new Scanner(targetFile);
+            while (scannerReader.hasNextLine()) {
+                String fileString = scannerReader.nextLine();
+                stringBuffer.append(fileString);
+            }
+            scannerReader.close();
+            return stringBuffer.toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
