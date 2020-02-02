@@ -18,6 +18,7 @@ public class FileRepositoryTest {
     private static final String TEST_DIR_COUNT_PATH = "testDirCountFiles";
     private static final String TEST_DIR_CREATE_PATH = "testDirCreateFile";
     private static final String TEST_FILE_TO_CREATE = "newFile.txt";
+    private static final String TEST_DIR_COPY_PATH = "testDirCopyFile";
 
     private static FileRepository fileRepository;
 
@@ -29,6 +30,10 @@ public class FileRepositoryTest {
     @BeforeEach
     void clean() {
         File file = getFile(TEST_DIR_CREATE_PATH + "/" + TEST_FILE_TO_CREATE);
+        if (file.exists()) {
+            file.delete();
+        }
+        file = getFile(TEST_DIR_COPY_PATH);
         if (file.exists()) {
             file.delete();
         }
@@ -60,6 +65,14 @@ public class FileRepositoryTest {
         assertEquals("Ya-hoo!", fileRepository.readFileFromResources("readme.txt"));
     }
 
+    //У Вас был пропущен тест для этого метода. Я добавила по аналогии с createFile, оба работают, но не пассятся тесты
+    //у меня, к сожалению, нет идей как это поправить
+    @Test
+    @DisplayName("Тест метода FileRepository.copyTXTFiles(String from, String to)")
+    void testCopyTXTFiles() {
+        fileRepository.copyTXTFiles(TEST_DIR_CREATE_PATH, TEST_DIR_COPY_PATH);
+        assertTrue(getFile(TEST_DIR_COPY_PATH + "/" + TEST_FILE_TO_CREATE).exists());
+    }
 
     private File getFile(String path) {
         ClassLoader classLoader = getClass().getClassLoader();

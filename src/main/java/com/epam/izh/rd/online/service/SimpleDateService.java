@@ -1,8 +1,9 @@
 package com.epam.izh.rd.online.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.text.SimpleDateFormat;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.sql.Date;
 
 public class SimpleDateService implements DateService {
 
@@ -14,7 +15,9 @@ public class SimpleDateService implements DateService {
      */
     @Override
     public String parseDate(LocalDate localDate) {
-        return null;
+        Date inputDate = Date.valueOf(localDate);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        return dateFormat.format(inputDate);
     }
 
     /**
@@ -25,7 +28,8 @@ public class SimpleDateService implements DateService {
      */
     @Override
     public LocalDateTime parseString(String string) {
-        return null;
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return LocalDateTime.parse(string, dateTimeFormatter);
     }
 
     /**
@@ -37,7 +41,7 @@ public class SimpleDateService implements DateService {
      */
     @Override
     public String convertToCustomFormat(LocalDate localDate, DateTimeFormatter formatter) {
-        return null;
+        return formatter.format(localDate);
     }
 
     /**
@@ -47,7 +51,10 @@ public class SimpleDateService implements DateService {
      */
     @Override
     public long getNextLeapYear() {
-        return 0;
+        if (getSecondsInYear(LocalDate.now().getYear()) != getSecondsInYear(2000)) {
+            return LocalDate.now().getYear() + 1;
+        } else
+            return LocalDate.now().getYear();
     }
 
     /**
@@ -57,7 +64,11 @@ public class SimpleDateService implements DateService {
      */
     @Override
     public long getSecondsInYear(int year) {
-        return 0;
+        Date startDate = new Date(0);
+        startDate.setYear(year - 1900);
+        Date endDate = new Date(0);
+        endDate.setYear(year + 1 - 1900);
+        return (endDate.getTime() - startDate.getTime()) / 1000;
     }
 
 
