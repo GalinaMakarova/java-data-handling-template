@@ -3,6 +3,7 @@ package com.epam.izh.rd.online.repository;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -18,20 +19,19 @@ public class SimpleFileRepository implements FileRepository {
      */
     @Override
     public long countFilesInDirectory(String path) {
-        long resultCountInDirectory = 0;
-        File targetObjectInDirectory = new File("src/main/resources/" + path);
-        if (targetObjectInDirectory.isDirectory()) {
-            File[] internalDirectoryObjectsArray = targetObjectInDirectory.listFiles();
-            assert internalDirectoryObjectsArray != null;
-            for (File internalDirectoryObject : internalDirectoryObjectsArray) {
-                resultCountInDirectory = resultCountInDirectory +
-                        countFilesInDirectory(path + "/" + internalDirectoryObject.getName());
+        long count = 0;
+        File directory = new File("src/main/resources/" + path);
+        if (directory.isDirectory()) {
+            File[] directoryFiles = directory.listFiles();
+
+            for (File file : directoryFiles) {
+                count = count +
+                        countFilesInDirectory(path + "/" + file.getName());
             }
         } else {
-            resultCountInDirectory = resultCountInDirectory + 1;
+            count = count + 1;
         }
-
-        return resultCountInDirectory;
+        return count;
     }
 
     /**
@@ -42,18 +42,18 @@ public class SimpleFileRepository implements FileRepository {
      */
     @Override
     public long countDirsInDirectory(String path) {
-        long resultFoldersCount = 0;
-        File targetObjectInDirectory = new File("src/main/resources/" + path);
-        if (targetObjectInDirectory.isDirectory()) {
-            resultFoldersCount = resultFoldersCount + 1;
-            File[] internalDirectoryObjectsArray = targetObjectInDirectory.listFiles();
-            assert internalDirectoryObjectsArray != null;
-            for (File internalDirectoryObject : internalDirectoryObjectsArray) {
-                resultFoldersCount = resultFoldersCount +
-                        countDirsInDirectory(path + "/" + internalDirectoryObject.getName());
+        long count = 0;
+        File directory = new File("src/main/resources/" + path);
+        if (directory.isDirectory()) {
+            count = count + 1;
+            File[] directoryFolders = directory.listFiles();
+
+            for (File folder : directoryFolders) {
+                count = count +
+                        countDirsInDirectory(path + "/" + folder.getName());
             }
         }
-        return resultFoldersCount;
+        return count;
     }
 
     /**
@@ -69,15 +69,17 @@ public class SimpleFileRepository implements FileRepository {
         File toDirectory = new File("src/main/resources/" + to);
         if (toDirectory.exists() && fromDirectory.exists() && fromDirectory.isDirectory()
                 && toDirectory.isDirectory()) {
-            File[] fromDirectoryFilesList = fromDirectory.listFiles();
-            assert fromDirectoryFilesList != null;
-            for (File bufferedFile : fromDirectoryFilesList) {
-                if (bufferedFile.isFile() && bufferedFile.getName().endsWith(".txt")) {
-                    File bufferedFileNewPath = new File(toDirectory.toPath() + "\\" + bufferedFile.getName());
-                    try {
-                        Files.copy(bufferedFile.toPath(), bufferedFileNewPath.toPath(), REPLACE_EXISTING);
-                    } catch (Exception e) {
-                        break;
+            if (Objects.requireNonNull(fromDirectory.listFiles()).length > 0) {
+                File[] fromDirFiles = fromDirectory.listFiles();
+                File bufFileFrom = Objects.requireNonNull(fromDirFiles[0]);
+                for (int i = 0; i < fromDirFiles.length; i++) {
+                    if (bufFileFrom.isFile() && bufFileFrom.getName().endsWith(".txt")) {
+                        File bufFileTo = new File(toDirectory.toPath() + "\\" + bufFileFrom.getName());
+                        try {
+                            Files.copy(bufFileFrom.toPath(), bufFileTo.toPath(), REPLACE_EXISTING);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -100,24 +102,26 @@ public class SimpleFileRepository implements FileRepository {
      */
     @Override
     public boolean createFile(String path, String name) {
-        File targetDirectory = new File("src/main/resources/" + path);
-        File targetFile = new File("src/main/resources/" + path, name);
-        if (!targetDirectory.exists()) {
-            if (targetDirectory.mkdir()) {
-                return createFile(path, name);
-            }
-            return false;
-        } else {
-            if (targetDirectory.isDirectory()) {
-                try {
-                    return targetFile.createNewFile();
-                } catch (IOException e) {
-                    return false;
+        try {
+            File targetDirectory = new File("src/main/resources/" + path);
+            File targetFile = new File("src/main/resources/" + path, name);
+            if (!targetDirectory.exists()) {
+                if (targetDirectory.mkdir()) {
+                    return createFile(path, name);
                 }
             } else {
-                return false;
+                if (targetDirectory.isDirectory()) {
+                    try {
+                        return targetFile.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
+        } catch (Exception e) {
+            System.out.println(Arrays.toString(e.getStackTrace()));
         }
+        return false;
     }
 
     /**
@@ -128,9 +132,8 @@ public class SimpleFileRepository implements FileRepository {
      */
     @Override
     public String readFileFromResources(String fileName) {
-        ClassLoader classLoader = getClass().getClassLoader();
         try {
-            File targetFile = new File(Objects.requireNonNull(classLoader.getResource(fileName)).getFile());
+            File targetFile = new File(Objects.requireNonNull(ClassLoader.getSystemClassLoader().getResource(fileName)).getFile());
             StringBuilder stringBuffer = new StringBuilder();
             Scanner scannerReader = new Scanner(targetFile);
             while (scannerReader.hasNextLine()) {
@@ -140,7 +143,8 @@ public class SimpleFileRepository implements FileRepository {
             scannerReader.close();
             return stringBuffer.toString();
         } catch (Exception e) {
-            return null;
+            e.printStackTrace();
         }
+        return null;
     }
 }

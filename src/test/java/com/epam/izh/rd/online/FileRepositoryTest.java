@@ -18,7 +18,8 @@ public class FileRepositoryTest {
     private static final String TEST_DIR_COUNT_PATH = "testDirCountFiles";
     private static final String TEST_DIR_CREATE_PATH = "testDirCreateFile";
     private static final String TEST_FILE_TO_CREATE = "newFile.txt";
-    private static final String TEST_DIR_COPY_PATH = "testDirCopyFile";
+    private static final String TEST_DIR_COPY_PATH_OUT = "testDirCopyFileTo"; //вспомогательная директория, куда производим копирование файла
+    private static final String TEST_DIR_COPY_PATH_IN = "testDirCopyFileFrom"; //вспомогательная директория откуда копируем файл
 
     private static FileRepository fileRepository;
 
@@ -29,11 +30,15 @@ public class FileRepositoryTest {
 
     @BeforeEach
     void clean() {
-        File file = getFile(TEST_DIR_CREATE_PATH + "/" + TEST_FILE_TO_CREATE);
+        File file = getFile(TEST_DIR_CREATE_PATH);
         if (file.exists()) {
             file.delete();
         }
-        file = getFile(TEST_DIR_COPY_PATH);
+        file = getFile(TEST_DIR_COPY_PATH_OUT);
+        if (file.exists()) {
+            file.delete();
+        }
+        file = getFile(TEST_DIR_COPY_PATH_IN);
         if (file.exists()) {
             file.delete();
         }
@@ -51,12 +56,11 @@ public class FileRepositoryTest {
         assertEquals(10, fileRepository.countFilesInDirectory(TEST_DIR_COUNT_PATH));
     }
 
+    //зменена логика теста, проверяем сразу значение выходного параметра метода на истину
     @Test
     @DisplayName("Тест метода FileRepository.createFile(String path)")
     void testCreateFile() {
-        fileRepository.createFile(TEST_DIR_CREATE_PATH, TEST_FILE_TO_CREATE);
-
-        assertTrue(getFile(TEST_DIR_CREATE_PATH + "/" + TEST_FILE_TO_CREATE).exists());
+        assertTrue(fileRepository.createFile(TEST_DIR_CREATE_PATH, TEST_FILE_TO_CREATE));
     }
 
     @Test
@@ -65,13 +69,14 @@ public class FileRepositoryTest {
         assertEquals("Ya-hoo!", fileRepository.readFileFromResources("readme.txt"));
     }
 
-    //У Вас был пропущен тест для этого метода. Я добавила по аналогии с createFile, оба работают, но не пассятся тесты
-    //у меня, к сожалению, нет идей как это поправить
+    //добавлен тест для copyTXTFiles метода
     @Test
     @DisplayName("Тест метода FileRepository.copyTXTFiles(String from, String to)")
     void testCopyTXTFiles() {
-        fileRepository.copyTXTFiles(TEST_DIR_CREATE_PATH, TEST_DIR_COPY_PATH);
-        assertTrue(getFile(TEST_DIR_COPY_PATH + "/" + TEST_FILE_TO_CREATE).exists());
+        if (fileRepository.createFile(TEST_DIR_COPY_PATH_IN, TEST_FILE_TO_CREATE)) { //первым шагом создаем вспомогательную директорию и файл
+            fileRepository.copyTXTFiles(TEST_DIR_COPY_PATH_IN, TEST_DIR_COPY_PATH_OUT);
+        }
+        assertTrue(new File("src/main/resources/" + TEST_DIR_COPY_PATH_OUT + "/" + TEST_FILE_TO_CREATE).exists());
     }
 
     private File getFile(String path) {
